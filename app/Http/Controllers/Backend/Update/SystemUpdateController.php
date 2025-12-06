@@ -26,37 +26,35 @@ class SystemUpdateController extends Controller
         }
     }
 
+
     public function index()
     {
-        // list uploaded zip (if any) and backups
-        // $uploaded = File::exists($this->updatesDir.'/uploaded.zip') ? 'uploaded.zip' : null;
-        // $backups = [];
-        // foreach (glob($this->updatesDir.'/backups/*.zip') as $f) {
-        //     $backups[] = basename($f);
-        // }
-        // rsort($backups);
+        $uploaded = null;
 
+        // updates folder from first zip detect
+        $files = glob($this->updatesDir.'/*.zip');
 
-        $uploaded = File::exists($this->updatesDir.'/uploaded.zip') ? 'uploaded.zip' : null;
+        if (count($files)) {
+            $uploaded = basename($files[0]);
+        }
+
         $backups = [];
 
         foreach (glob($this->updatesDir.'/backups/*.zip') as $f) {
             $backups[] = [
                 'name' => basename($f),
-                'time' => (new \DateTime())->setTimestamp(filemtime($f))->setTimezone(new \DateTimeZone('Asia/Dhaka'))->format('Y-m-d h:i:s A'), // last modified time
+                'time' => (new \DateTime())
+                    ->setTimestamp(filemtime($f))
+                    ->setTimezone(new \DateTimeZone('Asia/Dhaka'))
+                    ->format('Y-m-d h:i:s A')
             ];
         }
 
-        // sort by time descending
         usort($backups, fn($a, $b) => strtotime($b['time']) - strtotime($a['time']));
 
-
-
-        return view('admin.system_update', [
-            'uploaded' => $uploaded,
-            'backups' => $backups,
-        ]);
+        return view('admin.system_update', compact('uploaded','backups'));
     }
+
 
     public function upload(Request $request)
     {
@@ -65,14 +63,70 @@ class SystemUpdateController extends Controller
         ]);
 
         $file = $request->file('update_zip');
-        $dest = $this->updatesDir . '/uploaded.zip';
 
-        // move/replace uploaded zip
-        if (File::exists($dest)) File::delete($dest);
-        $file->move($this->updatesDir, 'uploaded.zip');
+        // Original filename
+        $originalName = $file->getClientOriginalName();
+
+        // destination
+        $dest = $this->updatesDir . '/' . $originalName;
+
+        // if uploaded.zip than delete
+        foreach (glob($this->updatesDir.'/*.zip') as $old) {
+            File::delete($old);
+        }
+
+        // new name move
+        $file->move($this->updatesDir, $originalName);
+
+        // session  filename save
+        session(['uploaded_zip_name' => $originalName]);
 
         return back()->with('success', 'Update ZIP uploaded successfully.');
     }
+
+
+    // public function index()
+    // {
+    //     $uploaded = File::exists($this->updatesDir.'/uploaded.zip') ? 'uploaded.zip' : null;
+    //     $backups = [];
+
+    //     foreach (glob($this->updatesDir.'/backups/*.zip') as $f) {
+    //         $backups[] = [
+    //             'name' => basename($f),
+    //             'time' => (new \DateTime())->setTimestamp(filemtime($f))->setTimezone(new \DateTimeZone('Asia/Dhaka'))->format('Y-m-d h:i:s A'), // last modified time
+    //         ];
+    //     }
+
+    //     // sort by time descending
+    //     usort($backups, fn($a, $b) => strtotime($b['time']) - strtotime($a['time']));
+
+
+
+    //     return view('admin.system_update', [
+    //         'uploaded' => $uploaded,
+    //         'backups' => $backups,
+    //     ]);
+    // }
+
+    // public function upload(Request $request)
+    // {
+    //     $request->validate([
+    //         'update_zip' => 'required|file|mimes:zip'
+    //     ]);
+
+    //     $file = $request->file('update_zip');
+    //     $dest = $this->updatesDir . '/uploaded.zip';
+
+    //     // move/replace uploaded zip
+    //     if (File::exists($dest)) File::delete($dest);
+    //     $file->move($this->updatesDir, 'uploaded.zip');
+
+    //     return back()->with('success', 'Update ZIP uploaded successfully.');
+    // }
+
+
+
+
 
     // Create backup and return download response
     public function backup(Request $request)
@@ -99,6 +153,9 @@ class SystemUpdateController extends Controller
         return response()->download($path);
     }
 
+
+
+
     public function run(Request $request)
     {
         // require token
@@ -106,12 +163,17 @@ class SystemUpdateController extends Controller
             return back()->with('error', 'Invalid update token');
         }
 
-        $zipPath = $this->updatesDir . '/uploaded.zip';
-        if (!File::exists($zipPath)) {
+        // detect uploaded zip (any zip file)
+        $files = glob($this->updatesDir . '/*.zip');
+
+        if (!$files || !count($files)) {
             return back()->with('error', 'No uploaded ZIP found. Upload first.');
         }
 
-        // perform update using service (service will also create backup)
+        // take the first uploaded zip
+        $zipPath = $files[0];
+
+        // perform update using service
         $result = $this->updater->performUpdateFromUploadedZip($zipPath);
 
         if ($result['ok']) {
@@ -120,6 +182,39 @@ class SystemUpdateController extends Controller
 
         return back()->with('error', $result['message']);
     }
+
+
+
+
+
+
+
+
+
+
+
+
+    // public function run(Request $request)
+    // {
+    //     // require token
+    //     if ($request->token !== env('UPDATE_API_TOKEN')) {
+    //         return back()->with('error', 'Invalid update token');
+    //     }
+
+    //     $zipPath = $this->updatesDir . '/uploaded.zip';
+    //     if (!File::exists($zipPath)) {
+    //         return back()->with('error', 'No uploaded ZIP found. Upload first.');
+    //     }
+
+    //     // perform update using service (service will also create backup)
+    //     $result = $this->updater->performUpdateFromUploadedZip($zipPath);
+
+    //     if ($result['ok']) {
+    //         return back()->with('success', $result['message']);
+    //     }
+
+    //     return back()->with('error', $result['message']);
+    // }
 
 
     ////delete old backup

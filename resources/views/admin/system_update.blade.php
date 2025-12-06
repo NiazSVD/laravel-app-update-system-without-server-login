@@ -5,8 +5,8 @@
 
         {{-- Header --}}
         <div class="text-center mb-5">
-            <h2 class="fw-bold text-primary">Admin Panel — App Update</h2>
-            <p class="text-muted">Managed by <span class="fw-semibold">Niaz Ahmed Nayeem</span></p>
+            <h2 class="fw-bold text-primary">App Update</h2>
+            <p class="text-muted">Managed by <span class="fw-semibold">{{auth()->user()->name}}</span></p>
         </div>
 
         {{-- Alerts --}}
