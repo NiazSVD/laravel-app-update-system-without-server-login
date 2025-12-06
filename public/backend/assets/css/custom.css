@@ -1,0 +1,18 @@
+header {
+    background: white;
+}
+
+.menu-tabs {
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.nav-pills .nav-link {
+    border: 1px solid #435ebe;
+}
+
+.mixitup-control-active {
+    background: #435ebe;
+    color: white;
+}

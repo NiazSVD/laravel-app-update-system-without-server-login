@@ -1,0 +1,16 @@
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+
+ .logo {
+     height: 36px;
+     margin-bottom: 12px;
+ }
+
+ .pwd-toggle {
+     cursor: pointer;
+     position: absolute;
+     top: 50%;
+     right: 1rem;
+     transform: translateY(-50%);
+     z-index: 2;
+     color: #a9adb1;
+ }
