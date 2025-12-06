@@ -98,7 +98,7 @@ Route::post('/vendor/today-food-store', [FoodController::class, 'todayFoodstore'
 
 
 
-
+///App Update Routes
 Route::middleware('auth')->group(function () {
     Route::get('update', [SystemUpdateController::class, 'index'])->name('admin.update.index');
     Route::post('update/upload', [SystemUpdateController::class, 'upload'])->name('admin.update.upload');

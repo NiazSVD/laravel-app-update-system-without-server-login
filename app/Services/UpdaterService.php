@@ -134,12 +134,12 @@ class UpdaterService
         }
 
         // run migrations if allowed
-        // if (filter_var(env('UPDATE_RUN_MIGRATIONS', 'true'), FILTER_VALIDATE_BOOLEAN)) {
-        //     Artisan::call('migrate', ['--force' => true]);
+        if (filter_var(env('UPDATE_RUN_MIGRATIONS', 'true'), FILTER_VALIDATE_BOOLEAN)) {
+            Artisan::call('migrate', ['--force' => true]);
 
-        //     // Run seeders after migration
-        //     Artisan::call('db:seed', ['--force' => true]);
-        // }
+            // Run seeders after migration
+            // Artisan::call('db:seed', ['--force' => true]);
+        }
 
         // cleanup tmp
         $this->rrmdir($extractPath);
